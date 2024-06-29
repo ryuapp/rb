@@ -41,7 +41,7 @@ pub fn trash(filename: []const u8) !windows.BOOL {
 
     const result = SHFileOperationW(file_op);
     switch (result) {
-        0 => try std.io.getStdOut().writer().print("Crumple up '{s}'!", .{filename}),
+        0 => try std.io.getStdOut().writer().print("Crumpled up '{s}'!", .{filename}),
         2 => try std.io.getStdErr().writer().print("'{s}' is not found.", .{filename}),
         5 => try std.io.getStdErr().writer().print("Access denied to '{s}'.", .{filename}),
         32 => try std.io.getStdErr().writer().print("'{s}' is being used by another process.", .{filename}),
