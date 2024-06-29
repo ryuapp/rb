@@ -11,7 +11,7 @@ const LPSHFILEOPSTRUCT = extern struct {
     hNameMappings: ?*windows.LPVOID,
 };
 
-extern "shell32" fn SHFileOperationW(lpfileop: LPSHFILEOPSTRUCT) callconv(windows.WINAPI) windows.BOOL;
+extern "shell32" fn SHFileOperationW(lp_file_op: LPSHFILEOPSTRUCT) callconv(windows.WINAPI) windows.BOOL;
 
 const FO_DELETE: u32 = 3;
 const FOF_ALLOWUNDO: u16 = 64;
@@ -20,26 +20,26 @@ const FOF_WANTNUKEWARNING: u16 = 16384;
 
 fn utf8ToUtf16LeDynamic(utf8: []const u8) !*const []u16 {
     const len = try std.unicode.calcUtf16LeLen(utf8);
-    var utf16leBuffer = try std.heap.page_allocator.alloc(u16, len);
+    var utf16_buffer = try std.heap.page_allocator.alloc(u16, len);
 
-    _ = try std.unicode.utf8ToUtf16Le(utf16leBuffer[0..len], utf8);
+    _ = try std.unicode.utf8ToUtf16Le(utf16_buffer[0..len], utf8);
 
-    return &utf16leBuffer[0..len];
+    return &utf16_buffer[0..len];
 }
 
 pub fn trash(filename: []const u8) !windows.BOOL {
-    const utf16leFilename = try utf8ToUtf16LeDynamic(filename);
-    const fileop: LPSHFILEOPSTRUCT = .{
+    const filename_utf8 = try utf8ToUtf16LeDynamic(filename);
+    const file_op: LPSHFILEOPSTRUCT = .{
         .hwnd = null,
         .wFunc = FO_DELETE,
-        .pFrom = utf16leFilename.ptr,
+        .pFrom = filename_utf8.ptr,
         .pTo = std.unicode.utf8ToUtf16LeStringLiteral("").ptr,
         .fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_WANTNUKEWARNING,
         .fAnyOperationsAborted = @as(windows.BOOL, 0),
         .hNameMappings = null,
     };
 
-    const result = SHFileOperationW(fileop);
+    const result = SHFileOperationW(file_op);
     switch (result) {
         0 => try std.io.getStdOut().writer().print("Crumple up '{s}'!", .{filename}),
         2 => try std.io.getStdErr().writer().print("'{s}' is not found.", .{filename}),
