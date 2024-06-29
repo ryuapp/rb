@@ -1,7 +1,6 @@
 const std = @import("std");
 const trash = @import("trash.zig").trash;
 
-const debug = std.debug;
 const process = std.process;
 
 pub fn main() !void {
@@ -12,14 +11,19 @@ pub fn main() !void {
 
     defer process.argsFree(alc, args);
     if (args.len < 2) {
-        debug.print("Usage: gm [FILE]...\ngm: Trash files by Window API.", .{});
+        try std.io.getStdErr().writer().print("Usage: gm [FILE]...\ngm: Trash files by Window API.", .{});
         process.exit(2);
     }
 
+    var before_result: c_int = 0;
     for (args[1..args.len], 0..) |filename, i| {
-        if (i > 0)
-            debug.print("\n", .{});
-        try trash(filename);
+        if (i > 0) {
+            switch (before_result) {
+                0 => try std.io.getStdOut().writer().print("\n", .{}),
+                else => try std.io.getStdErr().writer().print("\n", .{}),
+            }
+        }
+        before_result = try trash(filename);
     }
     process.exit(0);
 }

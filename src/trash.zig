@@ -27,7 +27,7 @@ fn utf8ToUtf16LeDynamic(utf8: []const u8) !*const []u16 {
     return &utf16leBuffer[0..len];
 }
 
-pub fn trash(filename: []const u8) !void {
+pub fn trash(filename: []const u8) !windows.BOOL {
     const utf16leFilename = try utf8ToUtf16LeDynamic(filename);
     const fileop: LPSHFILEOPSTRUCT = .{
         .hwnd = null,
@@ -41,10 +41,11 @@ pub fn trash(filename: []const u8) !void {
 
     const result = SHFileOperationW(fileop);
     switch (result) {
-        0 => std.debug.print("Crumple up '{s}'!", .{filename}),
-        2 => std.debug.print("'{s}' is not found.", .{filename}),
-        5 => std.debug.print("Access denied to '{s}'.", .{filename}),
-        32 => std.debug.print("'{s}' is being used by another process.", .{filename}),
-        else => std.debug.print("gm: System error: {d}", .{result}),
+        0 => try std.io.getStdOut().writer().print("Crumple up '{s}'!", .{filename}),
+        2 => try std.io.getStdErr().writer().print("'{s}' is not found.", .{filename}),
+        5 => try std.io.getStdErr().writer().print("Access denied to '{s}'.", .{filename}),
+        32 => try std.io.getStdErr().writer().print("'{s}' is being used by another process.", .{filename}),
+        else => try std.io.getStdErr().writer().print("gm: System error: {d}", .{result}),
     }
+    return result;
 }
