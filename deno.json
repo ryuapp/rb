@@ -6,7 +6,7 @@
     "build": "deno task build:win",
     "build:win": "zig build -Dtarget=x86_64-windows-msvc -Doptimize=ReleaseSmall",
     "release": "deno task release:win",
-    "release:win": "deno task build:win && powershell Compress-Archive -Path zig-out\\bin\\gm.exe -DestinationPath zig-out\\me-x86_64-pc-windows-msvc.zip -Force"
+    "release:win": "deno task build:win && powershell Compress-Archive -Path zig-out\\bin\\gm.exe -DestinationPath zig-out\\gm-x86_64-pc-windows-msvc.zip -Force"
   },
   "exclude": ["README.md"]
 }
