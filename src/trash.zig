@@ -40,12 +40,15 @@ pub fn trash(filename: []const u8) !windows.BOOL {
     };
 
     const result = SHFileOperationW(file_op);
-    switch (result) {
-        0 => try std.io.getStdOut().writer().print("Crumpled up '{s}'!", .{filename}),
-        2 => try std.io.getStdErr().writer().print("'{s}' is not found.", .{filename}),
-        5 => try std.io.getStdErr().writer().print("Access denied to '{s}'.", .{filename}),
-        32 => try std.io.getStdErr().writer().print("'{s}' is being used by another process.", .{filename}),
-        else => try std.io.getStdErr().writer().print("gm: System error: {d}", .{result}),
+    if (result != 0) {
+        const prefix_msg = "gm: cannot remove";
+        switch (result) {
+            2 => try std.io.getStdErr().writer().print("{s} '{s}': Not found", .{ prefix_msg, filename }),
+            5 => try std.io.getStdErr().writer().print("{s} '{s}': Access denied", .{ prefix_msg, filename }),
+            32 => try std.io.getStdErr().writer().print("{s} '{s}': The process cannot access the file because it is being used by another process", .{ prefix_msg, filename }),
+            else => try std.io.getStdErr().writer().print("{s} '{s}': Error code: {d}", .{ prefix_msg, filename, result }),
+        }
     }
+
     return result;
 }
