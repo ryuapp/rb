@@ -1,9 +1,11 @@
 const std = @import("std");
 const trash = @import("trash.zig").trash;
+const Output = @import("output.zig").Output;
 
 const process = std.process;
 
 pub fn main() !void {
+    try Output.init();
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const alc = gpa.allocator();
@@ -12,6 +14,7 @@ pub fn main() !void {
     defer process.argsFree(alc, args);
     if (args.len < 2) {
         try std.io.getStdErr().writer().print("Usage: gm [FILE|DIRECTORY]...\nPut FILE(s) and DIRECTORY(ies) in the recycle bin.", .{});
+        Output.restore();
         process.exit(2);
     }
 
@@ -25,5 +28,6 @@ pub fn main() !void {
         }
         before_result = try trash(filename);
     }
+    Output.restore();
     process.exit(0);
 }
