@@ -40,14 +40,18 @@ pub fn trash(filename: []const u8) !windows.BOOL {
     };
 
     const result = SHFileOperationW(file_op);
-    if (result != 0) {
-        const prefix_msg = "gm: cannot remove";
-        switch (result) {
-            2 => try std.io.getStdErr().writer().print("{s} '{s}': Not found", .{ prefix_msg, filename }),
-            5 => try std.io.getStdErr().writer().print("{s} '{s}': Access denied", .{ prefix_msg, filename }),
-            32 => try std.io.getStdErr().writer().print("{s} '{s}': The process cannot access the file because it is being used by another process", .{ prefix_msg, filename }),
-            else => try std.io.getStdErr().writer().print("{s} '{s}': Error code: {d}", .{ prefix_msg, filename, result }),
-        }
+    const message = switch (result) {
+        2 => "Not found",
+        5 => "Access denied",
+        32 => "The process cannot access the file because it is being used by another process",
+        else => "",
+    };
+
+    const prefix_msg = "gm: cannot remove";
+    if (message.len > 0) {
+        try std.io.getStdErr().writer().print("{s} '{s}': {s}", .{ prefix_msg, filename, message });
+    } else if (result != 0) {
+        try std.io.getStdErr().writer().print("{s} '{s}': Error code: {d}", .{ prefix_msg, filename, result });
     }
 
     return result;
