@@ -47,7 +47,7 @@ pub fn trash(filename: []const u8) !windows.BOOL {
         else => "",
     };
 
-    const prefix_msg = "gm: cannot remove";
+    const prefix_msg = "rb: cannot remove";
     if (message.len > 0) {
         try std.io.getStdErr().writer().print("{s} '{s}': {s}", .{ prefix_msg, filename, message });
     } else if (result != 0) {

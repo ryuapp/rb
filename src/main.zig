@@ -13,7 +13,7 @@ pub fn main() !void {
 
     defer process.argsFree(alc, args);
     if (args.len < 2) {
-        try std.io.getStdErr().writer().print("Usage: gm [FILE|DIRECTORY]...\nPut FILE(s) and DIRECTORY(ies) in the recycle bin.", .{});
+        try std.io.getStdErr().writer().print("Usage: rb [FILE|DIRECTORY]...\nPut FILE(s) and DIRECTORY(ies) in the recycle bin.", .{});
         Output.restore();
         process.exit(2);
     }
