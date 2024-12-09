@@ -1,5 +1,5 @@
 const std = @import("std");
-const windows = @import("std").os.windows;
+const windows = std.os.windows;
 
 const LPSHFILEOPSTRUCT = extern struct {
     hwnd: ?*windows.HWND,
@@ -40,19 +40,5 @@ pub fn trash(filename: []const u8) !windows.BOOL {
     };
 
     const result = SHFileOperationW(file_op);
-    const message = switch (result) {
-        2 => "Not found",
-        5 => "Access denied",
-        32 => "The process cannot access the file because it is being used by another process",
-        else => "",
-    };
-
-    const prefix_msg = "rb: cannot remove";
-    if (message.len > 0) {
-        try std.io.getStdErr().writer().print("{s} '{s}': {s}", .{ prefix_msg, filename, message });
-    } else if (result != 0) {
-        try std.io.getStdErr().writer().print("{s} '{s}': Error code: {d}", .{ prefix_msg, filename, result });
-    }
-
     return result;
 }
