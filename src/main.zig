@@ -29,9 +29,9 @@ pub fn main() !void {
 
         const prefix_msg: []const u8 = "rb: cannot remove";
         if (message.len > 0) {
-            try std.io.getStdErr().writer().print("{s} '{s}': {s}", .{ prefix_msg, filename, message });
+            try std.io.getStdErr().writer().print("{s} '{s}': {s}\n", .{ prefix_msg, filename, message });
         } else if (result != 0) {
-            try std.io.getStdErr().writer().print("{s} '{s}': Error code: {d}", .{ prefix_msg, filename, result });
+            try std.io.getStdErr().writer().print("{s} '{s}': Error code: {d}\n", .{ prefix_msg, filename, result });
         }
     }
     Output.restore();
