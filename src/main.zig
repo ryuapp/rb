@@ -6,12 +6,10 @@ const process = std.process;
 
 pub fn main() !void {
     try Output.init();
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const alc = gpa.allocator();
-    const args = try process.argsAlloc(alc);
 
-    defer process.argsFree(alc, args);
+    const args = try process.argsAlloc(std.heap.page_allocator);
+    defer process.argsFree(std.heap.page_allocator, args);
+
     if (args.len < 2) {
         try std.io.getStdErr().writer().print("Usage: rb [FILE|DIRECTORY]...\nPut FILE(s) and DIRECTORY(ies) in the recycle bin.\n", .{});
         Output.restore();
