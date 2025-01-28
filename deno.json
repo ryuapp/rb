@@ -7,9 +7,11 @@
     "release": "deno task build && deno run -A release.ts",
     "check:hash": "certutil -hashfile dist/rb-x86_64-pc-windows-msvc.zip SHA256"
   },
-  "exclude": ["README.md"],
   "imports": {
     "@std/crypto": "jsr:@std/crypto@^1.0.3",
     "z2j": "npm:z2j@0.0.48"
+  },
+  "fmt": {
+    "proseWrap": "preserve"
   }
 }
