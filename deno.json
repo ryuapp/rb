@@ -4,7 +4,8 @@
     "test": "zig test src/main.zig",
     "fmt": "deno fmt && zig fmt src/**/*.zig",
     "build": "zig build -Dtarget=x86_64-windows-msvc -Doptimize=ReleaseSmall",
-    "release": "deno task build && powershell Compress-Archive -Path zig-out\\bin\\rb.exe -DestinationPath zig-out\\rb-x86_64-pc-windows-msvc.zip -Force"
+    "release": "deno task build && powershell Compress-Archive -Path zig-out\\bin\\rb.exe -DestinationPath zig-out\\rb-x86_64-pc-windows-msvc.zip -Force",
+    "check:hash": "certutil -hashfile zig-out\\rb-x86_64-pc-windows-msvc.zip SHA256"
   },
   "exclude": ["README.md"]
 }
