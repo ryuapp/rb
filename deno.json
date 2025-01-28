@@ -9,6 +9,7 @@
   },
   "imports": {
     "@std/crypto": "jsr:@std/crypto@^1.0.3",
+    "@std/encoding": "jsr:@std/encoding@^1.0.6",
     "z2j": "npm:z2j@0.0.48"
   },
   "fmt": {

@@ -2,11 +2,15 @@
   "version": "4",
   "specifiers": {
     "jsr:@std/crypto@^1.0.3": "1.0.3",
+    "jsr:@std/encoding@^1.0.6": "1.0.6",
     "npm:z2j@0.0.48": "0.0.48"
   },
   "jsr": {
     "@std/crypto@1.0.3": {
       "integrity": "a2a32f51ddef632d299e3879cd027c630dcd4d1d9a5285d6e6788072f4e51e7f"
+    },
+    "@std/encoding@1.0.6": {
+      "integrity": "ca87122c196e8831737d9547acf001766618e78cd8c33920776c7f5885546069"
     }
   },
   "npm": {
@@ -17,6 +21,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/crypto@^1.0.3",
+      "jsr:@std/encoding@^1.0.6",
       "npm:z2j@0.0.48"
     ]
   }

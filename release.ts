@@ -1,4 +1,5 @@
 import { crypto } from "@std/crypto";
+import { encodeHex } from "@std/encoding/hex";
 import zonToJson from "z2j";
 
 function loadBuildZigZon() {
@@ -14,10 +15,8 @@ const zip = new Deno.Command("powershell", {
 
 zip.spawn();
 const buildZigZon = loadBuildZigZon();
-const hash = await crypto.subtle.digest(
-  "SHA-256",
-  Deno.readFileSync("dist/rb-x86_64-pc-windows-msvc.zip"),
-);
+const data = await Deno.readFile("dist/rb-x86_64-pc-windows-msvc.zip");
+const hash = encodeHex(await crypto.subtle.digest("SHA-256", data));
 
 const scoopTemplate = {
   version: buildZigZon.version,
