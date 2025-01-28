@@ -1,0 +1,20 @@
+{
+  "version": "0.1.0",
+  "homepage": "https://github.com/ryuapp/rb",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/ryuapp/rb/releases/download/v0.1.0/rb-x86_64-pc-windows-msvc.zip",
+      "hash": {}
+    }
+  },
+  "bin": "rb.exe",
+  "checkver": "github",
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/ryuapp/rb/releases/download/v$version/rb-x86_64-pc-windows-msvc.zip"
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "version": "4",
+  "specifiers": {
+    "jsr:@std/crypto@^1.0.3": "1.0.3",
+    "npm:z2j@0.0.48": "0.0.48"
+  },
+  "jsr": {
+    "@std/crypto@1.0.3": {
+      "integrity": "a2a32f51ddef632d299e3879cd027c630dcd4d1d9a5285d6e6788072f4e51e7f"
+    }
+  },
+  "npm": {
+    "z2j@0.0.48": {
+      "integrity": "sha512-Hwyx0z/uLbqA/XqqJVvJbLTqf7jOzzvvJ6yXAV0DDIS0SImbfewLiCjrnlm69Hj7knbp8/MRDrUV++4ZdXFpLw=="
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/crypto@^1.0.3",
+      "npm:z2j@0.0.48"
+    ]
+  }
+}
