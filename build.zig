@@ -4,6 +4,7 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const clap = b.dependency("clap", .{});
     const exe = b.addExecutable(.{
         .name = "rb",
         .root_source_file = b.path("src/main.zig"),
@@ -11,6 +12,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    exe.root_module.addImport("clap", clap.module("clap"));
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);

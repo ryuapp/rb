@@ -1,22 +1,43 @@
 const std = @import("std");
 const trash = @import("trash.zig").trash;
 const Output = @import("output.zig").Output;
+const clap = @import("clap");
 
 const process = std.process;
 
 pub fn main() !void {
     try Output.init();
+    const alc = std.heap.page_allocator;
 
-    const args = try process.argsAlloc(std.heap.page_allocator);
-    defer process.argsFree(std.heap.page_allocator, args);
+    const params = comptime clap.parseParamsComptime(
+        \\-h, --help            Display this help and exit.
+        \\<str>...              Put FILE(s) and DIRECTORY(ies) in the recycle bin.
+    );
 
-    if (args.len < 2) {
+    var res = clap.parse(clap.Help, &params, clap.parsers.default, .{
+        .allocator = alc,
+    }) catch {
+        try std.io.getStdErr().writer().print("rb: cannot be executed: Invalid arguments\n", .{});
+        Output.restore();
+        process.exit(1);
+    };
+    defer res.deinit();
+
+    // Display help message
+    if (res.args.help != 0) {
         try std.io.getStdErr().writer().print("Usage: rb [FILE|DIRECTORY]...\nPut FILE(s) and DIRECTORY(ies) in the recycle bin.\n", .{});
         Output.restore();
         process.exit(2);
     }
 
-    for (args[1..args.len]) |filename| {
+    // No arguments
+    if (res.positionals.len == 0) {
+        try std.io.getStdErr().writer().print("rb: missing operand\nTry 'rb --help' more information", .{});
+        Output.restore();
+        process.exit(0);
+    }
+
+    for (res.positionals) |filename| {
         const result = try trash(filename);
         const message: []const u8 = switch (result) {
             2 => "Not found",
