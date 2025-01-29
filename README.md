@@ -8,3 +8,11 @@ Put FILE(s) and DIRECTORY(ies) in the recycle bin.
 ```sh
 rb [FILE|DIRECTORY]...
 ```
+
+### Installation
+
+[Scoop](https://scoop.sh):
+
+```bash
+scoop install https://raw.githubusercontent.com/ryuapp/rb/main/rb.json
+```
