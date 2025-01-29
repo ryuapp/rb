@@ -1,3 +1,4 @@
+import $ from "@david/dax";
 import { crypto } from "@std/crypto";
 import { encodeHex } from "@std/encoding/hex";
 import zonToJson from "z2j";
@@ -7,13 +8,9 @@ function loadBuildZigZon() {
   return JSON.parse(zon);
 }
 
-const zip = new Deno.Command("powershell", {
-  args: [
-    "Compress-Archive -Path zig-out/bin/rb.exe -DestinationPath dist/rb-x86_64-pc-windows-msvc.zip -Force",
-  ],
-});
+// zip the binary
+await $`powershell Compress-Archive -Path zig-out/bin/rb.exe -DestinationPath dist/rb-x86_64-pc-windows-msvc.zip -Force`;
 
-zip.spawn();
 const buildZigZon = loadBuildZigZon();
 const data = await Deno.readFile("dist/rb-x86_64-pc-windows-msvc.zip");
 const hash = encodeHex(await crypto.subtle.digest("SHA-256", data));
@@ -41,6 +38,7 @@ const scoopTemplate = {
   },
 };
 
+// update scoop config
 Deno.writeFileSync(
   "rb.json",
   new TextEncoder().encode(JSON.stringify(scoopTemplate, null, 2) + "\n"),

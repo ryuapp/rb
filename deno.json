@@ -8,6 +8,7 @@
     "check:hash": "certutil -hashfile dist/rb-x86_64-pc-windows-msvc.zip SHA256"
   },
   "imports": {
+    "@david/dax": "jsr:@david/dax@^0.42.0",
     "@std/crypto": "jsr:@std/crypto@^1.0.3",
     "@std/encoding": "jsr:@std/encoding@^1.0.6",
     "z2j": "npm:z2j@0.0.48"
