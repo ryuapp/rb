@@ -5,6 +5,13 @@ const clap = @import("clap");
 
 const process = std.process;
 
+/// Error message by error code
+fn errorMessage(code: i32) []const u8 {
+    var buffer: [4096]u8 = undefined;
+    const result = std.fmt.bufPrintZ(buffer[0..], "Error Code: {d}", .{code}) catch unreachable;
+    return @as([]const u8, result);
+}
+
 pub fn main() !void {
     try Output.init();
     const alc = std.heap.page_allocator;
@@ -46,18 +53,14 @@ pub fn main() !void {
 
     for (res.positionals) |filename| {
         const result = try trash(filename);
-        const message: []const u8 = switch (result) {
-            2 => "Not found",
-            5 => "Access denied",
-            32 => "The process cannot access the file because it is being used by another process",
-            else => "",
-        };
-
-        const prefix_msg: []const u8 = "rb: cannot remove";
-        if (message.len > 0) {
-            try std.io.getStdErr().writer().print("{s} '{s}': {s}\n", .{ prefix_msg, filename, message });
-        } else if (result != 0) {
-            try std.io.getStdErr().writer().print("{s} '{s}': Error code: {d}\n", .{ prefix_msg, filename, result });
+        if (result != 0) {
+            const message: []const u8 = switch (result) {
+                2 => "Not found",
+                5 => "Access denied",
+                32 => "The process cannot access the file because it is being used by another process",
+                else => errorMessage(result),
+            };
+            try std.io.getStdErr().writer().print("rb: cannot remove \"{s}\": {s}\n", .{ filename, message });
         }
     }
     Output.restore();
