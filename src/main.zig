@@ -25,14 +25,21 @@ pub fn main() !void {
 
     // Display help message
     if (res.args.help != 0) {
-        try std.io.getStdErr().writer().print("Usage: rb [FILE|DIRECTORY]...\nPut FILE(s) and DIRECTORY(ies) in the recycle bin.\n", .{});
+        const help_message =
+            \\Usage: rb [FILE|DIRECTORY]...
+            \\Put FILE(s) and DIRECTORY(ies) in the recycle bin.
+            \\
+            \\Options:
+            \\  -h, --help            Display this help
+        ;
+        try std.io.getStdErr().writer().print("{s}\n", .{help_message});
         Output.restore();
         process.exit(0);
     }
 
     // No arguments
     if (res.positionals.len == 0) {
-        try std.io.getStdErr().writer().print("rb: missing operand\nTry 'rb --help' more information", .{});
+        try std.io.getStdErr().writer().print("rb: missing operand\nTry 'rb --help' more information\n", .{});
         Output.restore();
         process.exit(1);
     }
