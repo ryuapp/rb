@@ -27,14 +27,14 @@ pub fn main() !void {
     if (res.args.help != 0) {
         try std.io.getStdErr().writer().print("Usage: rb [FILE|DIRECTORY]...\nPut FILE(s) and DIRECTORY(ies) in the recycle bin.\n", .{});
         Output.restore();
-        process.exit(2);
+        process.exit(0);
     }
 
     // No arguments
     if (res.positionals.len == 0) {
         try std.io.getStdErr().writer().print("rb: missing operand\nTry 'rb --help' more information", .{});
         Output.restore();
-        process.exit(0);
+        process.exit(1);
     }
 
     for (res.positionals) |filename| {
