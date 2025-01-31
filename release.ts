@@ -7,7 +7,8 @@ function loadBuildZigZon() {
   const zon = zonToJson(Deno.readTextFileSync("build.zig.zon"));
   return JSON.parse(zon);
 }
-
+// create dist directory
+await Deno.mkdir("dist", { recursive: true });
 // zip the binary
 await $`powershell Compress-Archive -Path zig-out/bin/rb.exe -DestinationPath dist/rb-x86_64-pc-windows-msvc.zip -Force`;
 
