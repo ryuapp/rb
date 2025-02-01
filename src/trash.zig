@@ -19,22 +19,16 @@ const FOF_ALLOWUNDO: u16 = 64;
 const FOF_SILENT: u16 = 4;
 const FOF_WANTNUKEWARNING: u16 = 16384;
 
-/// Converts UTF-8 into UTF-16 LE
-fn utf8ToUtf16LeDynamic(utf8: []const u8) !*const []u16 {
-    const len = try std.unicode.calcUtf16LeLen(utf8);
-    const alc = std.heap.page_allocator;
-    var utf16_buffer = try alc.alloc(u16, len);
+pub fn trash(allocator: std.mem.Allocator, filename: []const u8) !i32 {
+    // Convert filename to UTF-16
+    const filename_len = try std.unicode.calcUtf16LeLen(filename);
+    const utf16_buffer = try allocator.alloc(u16, filename_len);
+    _ = try std.unicode.utf8ToUtf16Le(utf16_buffer, filename);
 
-    _ = try std.unicode.utf8ToUtf16Le(utf16_buffer, utf8);
-
-    return &utf16_buffer;
-}
-
-pub fn trash(filename: []const u8) !i32 {
     const file_op: LPSHFILEOPSTRUCT = .{
         .hwnd = null,
         .wFunc = FO_DELETE,
-        .pFrom = (try utf8ToUtf16LeDynamic(filename)).ptr,
+        .pFrom = utf16_buffer.ptr,
         .pTo = std.unicode.utf8ToUtf16LeStringLiteral("").ptr,
         .fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_WANTNUKEWARNING,
         .fAnyOperationsAborted = @as(windows.BOOL, 0),

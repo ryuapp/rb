@@ -52,7 +52,7 @@ pub fn main() !void {
     }
 
     for (res.positionals) |filename| {
-        const result = try trash(filename);
+        const result = try trash(alc, filename);
         if (result != 0) {
             const message: []const u8 = switch (result) {
                 2 => "Not found",
