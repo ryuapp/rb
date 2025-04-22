@@ -4,14 +4,14 @@
     "test": "zig test src/main.zig",
     "fmt": "deno fmt && zig fmt src/**/*.zig",
     "build": "zig build -Dtarget=x86_64-windows-msvc -Doptimize=ReleaseSmall",
-    "release": "deno task build && deno run -A release.ts",
+    "release": "deno task build && deno run --allow-run -RWE release.ts",
     "check:hash": "certutil -hashfile dist/rb-x86_64-pc-windows-msvc.zip SHA256"
   },
   "imports": {
-    "@david/dax": "jsr:@david/dax@^0.42.0",
+    "@david/dax": "jsr:@david/dax@^0.43.0",
     "@std/crypto": "jsr:@std/crypto@^1.0.3",
     "@std/encoding": "jsr:@std/encoding@^1.0.6",
-    "z2j": "npm:z2j@0.0.48"
+    "zzon": "npm:zzon@^1.7.0"
   },
   "fmt": {
     "proseWrap": "preserve"

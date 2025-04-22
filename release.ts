@@ -1,18 +1,14 @@
 import $ from "@david/dax";
 import { crypto } from "@std/crypto";
 import { encodeHex } from "@std/encoding/hex";
-import zonToJson from "z2j";
+import { ZON } from "zzon";
 
-function loadBuildZigZon() {
-  const zon = zonToJson(Deno.readTextFileSync("build.zig.zon"));
-  return JSON.parse(zon);
-}
 // create dist directory
 await Deno.mkdir("dist", { recursive: true });
 // zip the binary
 await $`powershell Compress-Archive -Path zig-out/bin/rb.exe -DestinationPath dist/rb-x86_64-pc-windows-msvc.zip -Force`;
 
-const buildZigZon = loadBuildZigZon();
+const buildZigZon = ZON.parse(Deno.readTextFileSync("build.zig.zon"));
 const data = await Deno.readFile("dist/rb-x86_64-pc-windows-msvc.zip");
 const hash = encodeHex(await crypto.subtle.digest("SHA-256", data));
 

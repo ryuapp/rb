@@ -51,7 +51,7 @@ pub fn main() !void {
         process.exit(1);
     }
 
-    for (res.positionals) |filename| {
+    for (res.positionals[0]) |filename| {
         const result = try trash(alc, filename);
         if (result != 0) {
             const message: []const u8 = switch (result) {
