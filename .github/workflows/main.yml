@@ -20,7 +20,7 @@ jobs:
         uses: denoland/setup-deno@v2
 
       - name: Check format
-        run: deno task:check
+        run: deno task fmt:check
 
       - name: Check build
         run: deno task build
