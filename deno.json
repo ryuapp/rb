@@ -1,7 +1,7 @@
 {
   "tasks": {
     "run": "deno task build && zig-out/bin/rb.exe",
-    "test": "zig test src/main.zig",
+    "test": "zig build test",
     "fmt": "zig fmt . && deno fmt",
     "fmt:check": "zig fmt . --check && deno fmt --check",
     "build": "zig build -Dtarget=x86_64-windows-msvc -Doptimize=ReleaseSmall",
