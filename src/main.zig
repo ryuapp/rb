@@ -66,3 +66,7 @@ pub fn main() !void {
     Output.restore();
     process.exit(0);
 }
+
+test {
+    _ = trash;
+}
