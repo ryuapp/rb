@@ -5,12 +5,15 @@ const clap = @import("clap");
 
 const process = std.process;
 
+const rb_version = "0.1.2";
+
 pub fn main() !void {
     try Output.init();
     const alc = std.heap.page_allocator;
 
     const params = comptime clap.parseParamsComptime(
         \\-h, --help            Display this help and exit.
+        \\    --version         Display version information
         \\<str>...              Put FILE(s) and DIRECTORY(ies) in the recycle bin.
     );
 
@@ -31,8 +34,19 @@ pub fn main() !void {
             \\
             \\Options:
             \\  -h, --help            Display this help
+            \\      --version         Display version information
         ;
         try std.io.getStdErr().writer().print("{s}\n", .{help_message});
+        Output.restore();
+        process.exit(0);
+    }
+
+    // Display version information
+    if (res.args.version != 0) {
+        const message =
+            \\rb {s}
+        ;
+        try std.io.getStdErr().writer().print(message, .{rb_version});
         Output.restore();
         process.exit(0);
     }
