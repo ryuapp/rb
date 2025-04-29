@@ -4,16 +4,19 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const clap = b.dependency("clap", .{});
+    const zigwin32 = b.dependency("zigwin32", .{}).module("win32");
+
     const test_step = b.step("test", "Run all tests");
     const tests = b.addTest(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
+    tests.root_module.addImport("zigwin32", zigwin32);
     const run_tests = b.addRunArtifact(tests);
     test_step.dependOn(&run_tests.step);
 
-    const clap = b.dependency("clap", .{});
     const exe = b.addExecutable(.{
         .name = "rb",
         .root_source_file = b.path("src/main.zig"),
@@ -22,6 +25,7 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.root_module.addImport("clap", clap.module("clap"));
+    exe.root_module.addImport("zigwin32", zigwin32);
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);

@@ -1,43 +1,85 @@
 const std = @import("std");
-const windows = std.os.windows;
+const zigwin32 = @import("zigwin32");
 
-const LPSHFILEOPSTRUCT = extern struct {
-    hwnd: ?*windows.HWND,
-    wFunc: u32,
-    pFrom: ?[*]const u16, // PCWSTR
-    pTo: ?[*]const u16, // PCWSTR
-    fFlags: u16,
-    fAnyOperationsAborted: windows.BOOL,
-    hNameMappings: ?*windows.LPVOID,
-    lpszProgressTitle: ?[*:0]const u16,
-};
+const com = zigwin32.system.com;
+const shell = zigwin32.ui.shell;
 
-extern "shell32" fn SHFileOperationW(lpFileOp: LPSHFILEOPSTRUCT) callconv(windows.WINAPI) i32;
+const IShellItem = shell.IShellItem;
+const IFileOperation = shell.IFileOperation;
+const IID_IShellItem = shell.IID_IShellItem;
+const IID_IFileOperation = shell.IID_IFileOperation;
+const CLSID_FileOperation = shell.CLSID_FileOperation;
+const CLSCTX_ALL = com.CLSCTX_ALL;
+const COINIT_MULTITHREADED = com.COINIT_MULTITHREADED;
 
-const FO_DELETE: u32 = 3;
-const FOF_ALLOWUNDO: u16 = 64;
-const FOF_SILENT: u16 = 4;
-const FOF_WANTNUKEWARNING: u16 = 16384;
+const CoUninitialize = com.CoUninitialize;
+const CoInitializeEx = com.CoInitializeEx;
+const CoCreateInstance = com.CoCreateInstance;
+const SHCreateItemFromParsingName = shell.SHCreateItemFromParsingName;
+
+// Operation Flags
+// See: https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ifileoperation-setoperationflags
+const FOF_SILENT = shell.FOF_SILENT;
+const FOF_NOERRORUI = shell.FOF_NOERRORUI;
+const FOF_NOCONFIRMATION = shell.FOF_NOCONFIRMATION;
+const FOFX_ADDUNDORECORD = shell.FOFX_ADDUNDORECORD;
+const FOFX_EARLYFAILURE = shell.FOFX_EARLYFAILURE;
+const FOFX_RECYCLEONDELETE = shell.FOFX_RECYCLEONDELETE;
+
+fn getFileOperation() !*IFileOperation {
+    var file_op: *IFileOperation = undefined;
+    const hr = CoCreateInstance(
+        CLSID_FileOperation,
+        null,
+        CLSCTX_ALL,
+        IID_IFileOperation,
+        @ptrCast(&file_op),
+    );
+    if (hr != 0) return error.CoCreateInstanceFailed;
+    return file_op;
+}
+
+fn getShellItem(filename: [:0]u16) !*IShellItem {
+    var shell_item: *IShellItem = undefined;
+    const result = SHCreateItemFromParsingName(filename, null, IID_IShellItem, @ptrCast(&shell_item));
+    if (result != 0) return error.CreateItemFailed;
+    return shell_item;
+}
 
 pub fn trash(allocator: std.mem.Allocator, filename: []const u8) !i32 {
-    // Convert filename to UTF-16
-    const filename_len = try std.unicode.calcUtf16LeLen(filename);
-    const utf16_buffer = try allocator.alloc(u16, filename_len);
-    defer allocator.free(utf16_buffer);
-    _ = try std.unicode.utf8ToUtf16Le(utf16_buffer, filename);
+    // Initialize the COM Library
+    // See: https://learn.microsoft.com/en-us/windows/win32/learnwin32/initializing-the-com-library
+    const hr_init = CoInitializeEx(null, COINIT_MULTITHREADED);
+    defer CoUninitialize();
+    if (hr_init != 0) return error.CoInitializeFailed;
 
-    const file_op: LPSHFILEOPSTRUCT = .{
-        .hwnd = null,
-        .wFunc = FO_DELETE,
-        .pFrom = utf16_buffer.ptr,
-        .pTo = std.unicode.utf8ToUtf16LeStringLiteral("").ptr,
-        .fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_WANTNUKEWARNING,
-        .fAnyOperationsAborted = @as(windows.BOOL, 0),
-        .hNameMappings = null,
-        .lpszProgressTitle = null,
+    var file_op = getFileOperation() catch |err| {
+        return err;
     };
+    const operation_flags = FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMATION | FOFX_ADDUNDORECORD | FOFX_EARLYFAILURE | FOFX_RECYCLEONDELETE;
+    _ = file_op.SetOperationFlags(operation_flags);
+    const realpath = std.fs.cwd().realpathAlloc(allocator, filename) catch |err| {
+        if (err == error.FileNotFound) {
+            return 2;
+        }
+        return err;
+    };
+    defer allocator.free(realpath);
+    // Convert UTF-8 to UTF-16
+    const filepath = try std.unicode.utf8ToUtf16LeAllocZ(allocator, realpath);
+    defer allocator.free(filepath);
 
-    return SHFileOperationW(file_op);
+    const shell_item = getShellItem(filepath) catch |err| {
+        return err;
+    };
+    _ = file_op.DeleteItem(shell_item, null);
+
+    const result = file_op.PerformOperations();
+    return switch (result) {
+        zigwin32.foundation.E_ACCESSDENIED => 5,
+        shell.COPYENGINE_E_SHARING_VIOLATION_SRC => 32,
+        else => result,
+    };
 }
 
 test "trash file" {

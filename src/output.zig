@@ -1,6 +1,9 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+const win = std.os.windows;
+const k32 = win.kernel32;
+
 const is_windows = builtin.os.tag == .windows;
 
 pub const Output = struct {
@@ -16,8 +19,6 @@ pub const Output = struct {
     }
 };
 const WindowsOutput = struct {
-    const win = std.os.windows;
-    const k32 = win.kernel32;
     var console_output_cp: c_uint = @as(u32, 0);
 
     // Make a console output code is the same as before execution
