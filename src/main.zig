@@ -5,7 +5,7 @@ const clap = @import("clap");
 
 const process = std.process;
 
-const rb_version = "0.1.2";
+const rb_version = "0.2.0";
 
 pub fn main() !void {
     try Output.init();
