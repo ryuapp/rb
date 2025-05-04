@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  CI:
     strategy:
       matrix:
         os: [windows-2025, windows-2022, windows-2019]
@@ -20,22 +20,9 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
 
+      - name: Check format
+        run: deno task fmt:check
       - name: Check tests
         run: deno task test
       - name: Check release
         run: deno task release:check
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Zig
-        uses: mlugg/setup-zig@v1
-        with:
-          version: 0.14.0
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
-
-      - name: Check format
-        run: deno task fmt:check
