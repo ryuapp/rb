@@ -52,8 +52,8 @@ pub fn main() !void {
     }
 
     // No arguments
-    if (res.positionals.len == 0) {
-        try std.io.getStdErr().writer().print("rb: missing operand\nTry 'rb --help' more information\n", .{});
+    if (res.positionals[0].len == 0) {
+        try std.io.getStdErr().writer().print("rb: missing operand\nTry 'rb --help' for more information\n", .{});
         Output.restore();
         process.exit(1);
     }
