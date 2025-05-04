@@ -14,6 +14,12 @@ if (version !== buildZigZon.version) {
   );
 }
 
+// If --dry-run is passed, exit
+if (Deno.args.includes("--dry-run")) {
+  console.log("Dry run mode: skipping build and zip.");
+  Deno.exit(0);
+}
+
 // create dist directory
 await Deno.mkdir("dist", { recursive: true });
 // zip the binary
