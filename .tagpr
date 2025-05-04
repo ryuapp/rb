@@ -4,3 +4,4 @@
   releaseBranch = main
   command = "deno task release"
   commitPrefix = "release: "
+	versionFile = build.zig.zon
