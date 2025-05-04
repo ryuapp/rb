@@ -1,6 +1,0 @@
-[tagpr]
-  changelog = false
-  vPrefix = true
-  releaseBranch = main
-  command = "deno task release"
-  commitPrefix = "release: "
