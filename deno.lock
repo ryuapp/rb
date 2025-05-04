@@ -1,18 +1,18 @@
 {
-  "version": "4",
+  "version": "5",
   "specifiers": {
     "jsr:@david/dax@0.43": "0.43.0",
     "jsr:@david/path@0.2": "0.2.0",
     "jsr:@david/which@~0.4.1": "0.4.1",
     "jsr:@std/bytes@^1.0.5": "1.0.5",
     "jsr:@std/crypto@^1.0.3": "1.0.4",
-    "jsr:@std/encoding@^1.0.6": "1.0.9",
+    "jsr:@std/encoding@^1.0.10": "1.0.10",
     "jsr:@std/fmt@1": "1.0.6",
     "jsr:@std/fs@1": "1.0.16",
     "jsr:@std/io@0.225": "0.225.2",
     "jsr:@std/path@1": "1.0.8",
     "jsr:@std/path@^1.0.8": "1.0.8",
-    "npm:zzon@^1.7.0": "1.7.0"
+    "npm:zzon@1.7.0": "1.7.0"
   },
   "jsr": {
     "@david/dax@0.43.0": {
@@ -42,8 +42,8 @@
     "@std/crypto@1.0.4": {
       "integrity": "cee245c453bd5366207f4d8aa25ea3e9c86cecad2be3fefcaa6cb17203d79340"
     },
-    "@std/encoding@1.0.9": {
-      "integrity": "025b8f18eb1749bc30d1353bf48b77d1eb5e35610220fa226f5a046b9240c5d7"
+    "@std/encoding@1.0.10": {
+      "integrity": "8783c6384a2d13abd5e9e87a7ae0520a30e9f56aeeaa3bdf910a3eaaf5c811a1"
     },
     "@std/fmt@1.0.6": {
       "integrity": "a2c56a69a2369876ddb3ad6a500bb6501b5bad47bb3ea16bfb0c18974d2661fc"
@@ -73,8 +73,8 @@
     "dependencies": [
       "jsr:@david/dax@0.43",
       "jsr:@std/crypto@^1.0.3",
-      "jsr:@std/encoding@^1.0.6",
-      "npm:zzon@^1.7.0"
+      "jsr:@std/encoding@^1.0.10",
+      "npm:zzon@1.7.0"
     ]
   }
 }

@@ -12,8 +12,8 @@
   "imports": {
     "@david/dax": "jsr:@david/dax@^0.43.0",
     "@std/crypto": "jsr:@std/crypto@^1.0.3",
-    "@std/encoding": "jsr:@std/encoding@^1.0.6",
-    "zzon": "npm:zzon@^1.7.0"
+    "@std/encoding": "jsr:@std/encoding@^1.0.10",
+    "zzon": "npm:zzon@1.7.0"
   },
   "fmt": {
     "proseWrap": "preserve"
