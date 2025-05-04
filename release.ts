@@ -3,12 +3,22 @@ import { crypto } from "@std/crypto";
 import { encodeHex } from "@std/encoding/hex";
 import { ZON } from "zzon";
 
+// Check versions
+const buildZigZon = ZON.parse(Deno.readTextFileSync("build.zig.zon"));
+const versionMsgs = await $`zig-out/bin/rb.exe --version`.stdout("piped")
+  .stderr("piped");
+const version = versionMsgs.stderr.trim().split(" ").at(1);
+if (version !== buildZigZon.version) {
+  throw new Error(
+    `Version mismatch: build.zig.zon is ${buildZigZon.version}, but CLI is ${version}`,
+  );
+}
+
 // create dist directory
 await Deno.mkdir("dist", { recursive: true });
 // zip the binary
 await $`powershell Compress-Archive -Path zig-out/bin/rb.exe -DestinationPath dist/rb-x86_64-pc-windows-msvc.zip -Force`;
 
-const buildZigZon = ZON.parse(Deno.readTextFileSync("build.zig.zon"));
 const data = await Deno.readFile("dist/rb-x86_64-pc-windows-msvc.zip");
 const hash = encodeHex(await crypto.subtle.digest("SHA-256", data));
 
