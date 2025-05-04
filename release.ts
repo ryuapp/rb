@@ -3,22 +3,13 @@ import { crypto } from "@std/crypto";
 import { encodeHex } from "@std/encoding/hex";
 import { ZON } from "zzon";
 
-// Check versions
+// Update version.zon
 const buildZigZon = ZON.parse(Deno.readTextFileSync("build.zig.zon"));
-const versionMsgs = await $`zig-out/bin/rb.exe --version`.stdout("piped")
-  .stderr("piped");
-const version = versionMsgs.stderr.trim().split(" ").at(1);
-if (version !== buildZigZon.version) {
-  throw new Error(
-    `Version mismatch: build.zig.zon is ${buildZigZon.version}, but CLI is ${version}`,
-  );
-}
-
-// If --dry-run is passed, exit
-if (Deno.args.includes("--dry-run")) {
-  console.log("Dry run mode: skipping build and zip.");
-  Deno.exit(0);
-}
+const versionZon = {
+  version: buildZigZon.version,
+};
+await Deno.writeTextFile("src/version.zon", ZON.stringify(versionZon));
+await $`zig fmt src/version.zon`;
 
 // create dist directory
 await Deno.mkdir("dist", { recursive: true });

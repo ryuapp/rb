@@ -5,7 +5,10 @@ const clap = @import("clap");
 
 const process = std.process;
 
-const rb_version = "0.2.0";
+const VersionStruct = struct {
+    version: []const u8,
+};
+const RbVersion: VersionStruct = @import("version.zon");
 
 pub fn main() !void {
     try Output.init();
@@ -46,7 +49,7 @@ pub fn main() !void {
         const message =
             \\rb {s}
         ;
-        try std.io.getStdErr().writer().print(message, .{rb_version});
+        try std.io.getStdErr().writer().print(message, .{RbVersion.version});
         Output.restore();
         process.exit(0);
     }
