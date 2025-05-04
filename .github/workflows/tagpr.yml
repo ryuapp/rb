@@ -5,7 +5,7 @@ on:
 
 jobs:
   tagpr:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
