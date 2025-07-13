@@ -16,6 +16,7 @@ pub fn main() !void {
     const alc = std.heap.page_allocator;
 
     const params = comptime clap.parseParamsComptime(
+        \\-f, --force           Ignore nonexistent files and arguments, never prompt
         \\-v, --verbose         Explain what is being done
         \\-h, --help            Display this help and exit.
         \\    --version         Display version information
@@ -38,6 +39,7 @@ pub fn main() !void {
             \\Put FILE(s) and DIRECTORY(ies) in the recycle bin.
             \\
             \\Options:
+            \\  -f, --force           Ignore nonexistent files and arguments, never prompt
             \\  -v, --verbose         Explain what is being done
             \\  -h, --help            Display this help
             \\      --version         Display version information
@@ -65,10 +67,14 @@ pub fn main() !void {
     }
 
     const verbose = res.args.verbose != 0;
+    const force = res.args.force != 0;
 
     for (res.positionals[0]) |filename| {
         const result = try trash.trash(alc, filename);
-        if (result != 0) {
+        // If --force is enabled and file doesn't exist (error code 2) on Windows, ignore it
+        if (force and ((comptime builtin.os.tag == .windows) and result == 2)) {
+            continue;
+        } else if (result != 0) {
             const message = try trash.getErrorMessage(alc, result);
             defer alc.free(message);
             try std.io.getStdErr().writer().print("rb: cannot remove '{s}': {s}\n", .{ filename, message });
