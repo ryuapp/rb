@@ -16,6 +16,7 @@ pub fn main() !void {
     const alc = std.heap.page_allocator;
 
     const params = comptime clap.parseParamsComptime(
+        \\-v, --verbose         Explain what is being done
         \\-h, --help            Display this help and exit.
         \\    --version         Display version information
         \\<str>...              Put FILE(s) and DIRECTORY(ies) in the recycle bin.
@@ -37,6 +38,7 @@ pub fn main() !void {
             \\Put FILE(s) and DIRECTORY(ies) in the recycle bin.
             \\
             \\Options:
+            \\  -v, --verbose         Explain what is being done
             \\  -h, --help            Display this help
             \\      --version         Display version information
         ;
@@ -62,12 +64,16 @@ pub fn main() !void {
         process.exit(1);
     }
 
+    const verbose = res.args.verbose != 0;
+
     for (res.positionals[0]) |filename| {
         const result = try trash.trash(alc, filename);
         if (result != 0) {
             const message = try trash.getErrorMessage(alc, result);
             defer alc.free(message);
-            try std.io.getStdErr().writer().print("rb: cannot remove \"{s}\": {s}\n", .{ filename, message });
+            try std.io.getStdErr().writer().print("rb: cannot remove '{s}': {s}\n", .{ filename, message });
+        } else if (verbose) {
+            try std.io.getStdErr().writer().print("removed '{s}'\n", .{filename});
         }
     }
     Output.restore();
