@@ -3,6 +3,9 @@ const zigwin32 = @import("zigwin32");
 
 const com = zigwin32.system.com;
 const shell = zigwin32.ui.shell;
+const foundation = zigwin32.foundation;
+const debug = zigwin32.system.diagnostics.debug;
+const memory = zigwin32.system.memory;
 
 const IShellItem = shell.IShellItem;
 const IFileOperation = shell.IFileOperation;
@@ -16,6 +19,9 @@ const CoUninitialize = com.CoUninitialize;
 const CoInitializeEx = com.CoInitializeEx;
 const CoCreateInstance = com.CoCreateInstance;
 const SHCreateItemFromParsingName = shell.SHCreateItemFromParsingName;
+
+const FormatMessageW = debug.FormatMessageW;
+const LocalFree = memory.LocalFree;
 
 // Operation Flags
 // See: https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ifileoperation-setoperationflags
@@ -80,4 +86,43 @@ pub fn trash(allocator: std.mem.Allocator, filename: []const u8) !i32 {
         shell.COPYENGINE_E_SHARING_VIOLATION_SRC => 32,
         else => result,
     };
+}
+
+pub fn getErrorMessage(allocator: std.mem.Allocator, error_code: i32) ![]u8 {
+    var message_buffer: ?[*:0]u16 = null;
+    const flags = debug.FORMAT_MESSAGE_OPTIONS{
+        .FROM_SYSTEM = 1,
+        .IGNORE_INSERTS = 1,
+        .ALLOCATE_BUFFER = 1,
+    };
+
+    const chars_written = FormatMessageW(
+        flags,
+        null,
+        @intCast(error_code),
+        0,
+        @ptrCast(&message_buffer),
+        0,
+        null,
+    );
+
+    if (chars_written == 0 or message_buffer == null) {
+        return std.fmt.allocPrint(allocator, "Error Code: {d}", .{error_code});
+    }
+
+    defer _ = LocalFree(@intCast(@intFromPtr(message_buffer)));
+
+    const message_utf16 = message_buffer.?[0..chars_written];
+    var utf8_message = try std.unicode.utf16LeToUtf8Alloc(allocator, message_utf16);
+
+    // Remove trailing newline/carriage return if present
+    if (utf8_message.len > 0) {
+        var end = utf8_message.len;
+        while (end > 0 and (utf8_message[end - 1] == '\n' or utf8_message[end - 1] == '\r')) {
+            end -= 1;
+        }
+        utf8_message = utf8_message[0..end];
+    }
+
+    return utf8_message;
 }

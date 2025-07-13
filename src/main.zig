@@ -1,5 +1,6 @@
 const std = @import("std");
-const trash = @import("trash.zig").trash;
+const builtin = @import("builtin");
+const trash = @import("trash.zig");
 const Output = @import("output.zig").Output;
 const clap = @import("clap");
 
@@ -62,14 +63,10 @@ pub fn main() !void {
     }
 
     for (res.positionals[0]) |filename| {
-        const result = try trash(alc, filename);
+        const result = try trash.trash(alc, filename);
         if (result != 0) {
-            const message: []const u8 = switch (result) {
-                2 => "Not found",
-                5 => "Access denied",
-                32 => "The process cannot access the file because it is being used by another process",
-                else => try std.fmt.allocPrint(alc, "Error Code: {d}", .{result}),
-            };
+            const message = try trash.getErrorMessage(alc, result);
+            defer alc.free(message);
             try std.io.getStdErr().writer().print("rb: cannot remove \"{s}\": {s}\n", .{ filename, message });
         }
     }
