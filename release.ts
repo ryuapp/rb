@@ -13,10 +13,9 @@ await $`zig fmt src/version.zon`;
 
 // create dist directory
 await Deno.mkdir("dist", { recursive: true });
-// zip the binary
-await $`powershell Compress-Archive -Path zig-out/bin/rb.exe -DestinationPath dist/rb-x86_64-pc-windows-msvc.zip -Force`;
 
-const data = await Deno.readFile("dist/rb-x86_64-pc-windows-msvc.zip");
+await Deno.rename("zig-out/bin/rb.exe", "dist/rb-x86_64-pc-windows-msvc.exe");
+const data = await Deno.readFile("dist/rb-x86_64-pc-windows-msvc.exe");
 const hash = encodeHex(await crypto.subtle.digest("SHA-256", data));
 
 const scoopTemplate = {
@@ -26,7 +25,7 @@ const scoopTemplate = {
   architecture: {
     "64bit": {
       url:
-        `https://github.com/ryuapp/rb/releases/download/v${buildZigZon.version}/rb-x86_64-pc-windows-msvc.zip`,
+        `https://github.com/ryuapp/rb/releases/download/v${buildZigZon.version}/rb-x86_64-pc-windows-msvc.exe`,
       hash: hash,
     },
   },
@@ -36,7 +35,7 @@ const scoopTemplate = {
     architecture: {
       "64bit": {
         url:
-          "https://github.com/ryuapp/rb/releases/download/v$version/rb-x86_64-pc-windows-msvc.zip",
+          "https://github.com/ryuapp/rb/releases/download/v$version/rb-x86_64-pc-windows-msvc.exe",
       },
     },
   },
