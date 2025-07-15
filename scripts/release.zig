@@ -23,6 +23,9 @@ pub fn main() !void {
     // Format version.zon
     try formatVersionZon(allocator);
 
+    // Build the project
+    try buildProject(allocator);
+
     // Create dist directory
     try fs.cwd().makePath("dist");
 
@@ -69,6 +72,17 @@ fn writeVersionZon(allocator: std.mem.Allocator, version: []const u8) !void {
 
 fn formatVersionZon(allocator: std.mem.Allocator) !void {
     const argv = [_][]const u8{ "zig", "fmt", "src/version.zon" };
+    var child = std.process.Child.init(&argv, allocator);
+    _ = try child.spawnAndWait();
+}
+
+fn buildProject(allocator: std.mem.Allocator) !void {
+    const argv = [_][]const u8{
+        "zig",
+        "build",
+        "-Dtarget=x86_64-windows-msvc",
+        "-Doptimize=ReleaseSmall",
+    };
     var child = std.process.Child.init(&argv, allocator);
     _ = try child.spawnAndWait();
 }
