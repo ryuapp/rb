@@ -6,7 +6,6 @@
     "fmt:check": "zig fmt . --check && deno fmt --check",
     "build": "zig build -Dtarget=x86_64-windows-msvc -Doptimize=ReleaseSmall",
     "release": "deno task build && zig run release.zig",
-    "release:check": "deno task release --dry-run",
     "check:hash": "certutil -hashfile dist/rb-x86_64-pc-windows-msvc.zip SHA256"
   },
   "fmt": {
