@@ -25,4 +25,4 @@ jobs:
       - name: Check tests
         run: deno task test
       - name: Check release
-        run: deno task release:check
+        run: deno task release

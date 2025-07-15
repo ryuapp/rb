@@ -5,15 +5,8 @@
     "fmt": "zig fmt . && deno fmt",
     "fmt:check": "zig fmt . --check && deno fmt --check",
     "build": "zig build -Dtarget=x86_64-windows-msvc -Doptimize=ReleaseSmall",
-    "release": "deno task build && deno run --allow-run -RWE release.ts",
-    "release:check": "deno task release --dry-run",
+    "release": "deno task build && zig run ./scripts/release.zig",
     "check:hash": "certutil -hashfile dist/rb-x86_64-pc-windows-msvc.zip SHA256"
-  },
-  "imports": {
-    "@david/dax": "jsr:@david/dax@^0.43.0",
-    "@std/crypto": "jsr:@std/crypto@^1.0.3",
-    "@std/encoding": "jsr:@std/encoding@^1.0.10",
-    "zzon": "npm:zzon@1.7.0"
   },
   "fmt": {
     "proseWrap": "preserve"
