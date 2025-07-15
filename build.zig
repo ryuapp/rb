@@ -37,4 +37,15 @@ pub fn build(b: *std.Build) void {
 
     const run_step = b.step("run", "Run the cli");
     run_step.dependOn(&run_cmd.step);
+
+    // Release step
+    const release_step = b.step("release", "Run release script");
+    const release_exe = b.addExecutable(.{
+        .name = "release",
+        .root_source_file = b.path("scripts/release.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    const release_cmd = b.addRunArtifact(release_exe);
+    release_step.dependOn(&release_cmd.step);
 }
