@@ -22,6 +22,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
+        .win32_manifest = b.path("src/rb.manifest"),
     });
 
     exe.root_module.addImport("clap", clap.module("clap"));

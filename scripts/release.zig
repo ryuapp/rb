@@ -23,6 +23,9 @@ pub fn main() !void {
     // Format version.zon
     try formatVersionZon(allocator);
 
+    // Write rb.manifest
+    try writeRbManifest(allocator, version);
+
     // Build the project
     try buildProject(allocator);
 
@@ -74,6 +77,21 @@ fn formatVersionZon(allocator: std.mem.Allocator) !void {
     const argv = [_][]const u8{ "zig", "fmt", "src/version.zon" };
     var child = std.process.Child.init(&argv, allocator);
     _ = try child.spawnAndWait();
+}
+
+fn writeRbManifest(allocator: std.mem.Allocator, version: []const u8) !void {
+    const manifest_content = try std.fmt.allocPrint(allocator,
+        \\<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        \\<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+        \\  <assemblyIdentity type="win32" name="RyuApp.Tools.Rb" version="{s}" />
+        \\</assembly>
+        \\
+    , .{version});
+    defer allocator.free(manifest_content);
+
+    const file = try fs.cwd().createFile("src/rb.manifest", .{});
+    defer file.close();
+    try file.writeAll(manifest_content);
 }
 
 fn buildProject(allocator: std.mem.Allocator) !void {
