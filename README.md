@@ -1,6 +1,7 @@
 ### rb
 
-<a href="https://github.com/ryuapp/rb/actions?query=workflow%3ACI"><img alt="CI status" src="https://github.com/ryuapp/rb/workflows/CI/badge.svg"></a> <a href="https://github.com/ryuapp/rb/releases/latest"><img alt="Latest Version" src="https://img.shields.io/github/v/tag/ryuapp/rb?label=Latest%20Version"></a> <a href="https://github.com/ryuapp/rb/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-blue"></a>
+[![npm](https://github.com/ryuapp/rb/workflows/CI/badge.svg)](https://github.com/ryuapp/rb/actions?query=workflow%3ACI)
+[![License](https://img.shields.io/github/license/ryuapp/rb?labelColor=171717&color=39b54a&label=License)](https://github.com/ryuapp/rb/blob/main/LICENSE)
 
 **rb** is a rm(1) clone with the recycle bin for Windows.\
 Put FILE(s) and DIRECTORY(ies) in the recycle bin.
