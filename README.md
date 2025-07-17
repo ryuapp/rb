@@ -14,8 +14,6 @@ rb [FILE|DIRECTORY]...
 
 ### Installation
 
-**rb** is only available for Windows now.
-
 [Scoop](https://scoop.sh):
 
 ```bash
