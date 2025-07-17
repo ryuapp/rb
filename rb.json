@@ -5,7 +5,7 @@
   "architecture": {
     "64bit": {
       "url": "https://github.com/ryuapp/rb/releases/download/v0.3.2/rb-x86_64-pc-windows-msvc.zip",
-      "hash": "150c1ab4d05591783ef5bd6e5f4136e202769dc0dd8a709f529844bcea73c4b1"
+      "hash": "06f1bf05908d1a1d92c7aff82f8438c1f08eb10ebcde1dfa1fac255a83b0d795"
     }
   },
   "bin": "rb.exe",
