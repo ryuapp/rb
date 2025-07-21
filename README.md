@@ -1,21 +1,23 @@
-### rb
+# rb
 
 [![npm](https://github.com/ryuapp/rb/workflows/CI/badge.svg)](https://github.com/ryuapp/rb/actions?query=workflow%3ACI)
-[![License](https://img.shields.io/github/license/ryuapp/rb?labelColor=171717&color=39b54a&label=License)](https://github.com/ryuapp/rb/blob/main/LICENSE)
-[![Winget Version](https://img.shields.io/winget/v/Ryuapp.Rb?labelColor=171717&color=39b54a&label=WinGet)](https://github.com/ryuapp/rb/releases)
+[![License](https://img.shields.io/github/license/ryuapp/rb?labelColor=171717&color=22b140&label=License)](https://github.com/ryuapp/rb/blob/main/LICENSE)
+[![Winget Version](https://img.shields.io/winget/v/Ryuapp.Rb?labelColor=171717&color=22b140&label=WinGet)](https://github.com/ryuapp/rb/releases)
+
+<img align="right" src="https://img.ryu.app/logo/rb.svg" height="100px" alt="rb logo">
 
 **rb** is a rm(1) clone with the recycle bin for Windows.\
 Put FILE(s) and DIRECTORY(ies) in the recycle bin.
 
-### Usage
+## Usage
 
 ```sh
 rb [FILE|DIRECTORY]...
 ```
 
-### Installation
+## Installation
 
-[Winget](https://github.com/microsoft/winget-cli)(Recommended):
+[Winget](https://github.com/microsoft/winget-cli) (Recommended):
 
 ```bash
 winget install Ryuapp.Rb
