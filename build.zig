@@ -8,24 +8,34 @@ pub fn build(b: *std.Build) void {
     const zigwin32 = b.dependency("zigwin32", .{}).module("win32");
 
     const test_step = b.step("test", "Run all tests");
-    const tests = b.addTest(.{
+
+    // Create a module for the main source
+    const main_module = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
-    tests.root_module.addImport("zigwin32", zigwin32);
-    const run_tests = b.addRunArtifact(tests);
+    main_module.addImport("zigwin32", zigwin32);
+
+    const unit_tests = b.addTest(.{
+        .root_module = main_module,
+    });
+    const run_tests = b.addRunArtifact(unit_tests);
     test_step.dependOn(&run_tests.step);
+
+    const exe_module = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    exe_module.addImport("clap", clap.module("clap"));
+    exe_module.addImport("zigwin32", zigwin32);
 
     const exe = b.addExecutable(.{
         .name = "rb",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = exe_module,
     });
 
-    exe.root_module.addImport("clap", clap.module("clap"));
-    exe.root_module.addImport("zigwin32", zigwin32);
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);
@@ -40,11 +50,14 @@ pub fn build(b: *std.Build) void {
 
     // Release step
     const release_step = b.step("release", "Run release script");
-    const release_exe = b.addExecutable(.{
-        .name = "release",
+    const release_module = b.createModule(.{
         .root_source_file = b.path("scripts/release.zig"),
         .target = target,
         .optimize = optimize,
+    });
+    const release_exe = b.addExecutable(.{
+        .name = "release",
+        .root_module = release_module,
     });
     const release_cmd = b.addRunArtifact(release_exe);
     release_step.dependOn(&release_cmd.step);
