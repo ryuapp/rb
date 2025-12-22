@@ -42,8 +42,7 @@ pub fn main() !void {
     std.crypto.hash.sha2.Sha256.hash(zip_data, &hash, .{});
 
     // Convert hash to hex string
-    var hex_hash: [std.crypto.hash.sha2.Sha256.digest_length * 2]u8 = undefined;
-    _ = std.fmt.bufPrint(&hex_hash, "{}", .{std.fmt.fmtSliceHexLower(&hash)}) catch unreachable;
+    const hex_hash = std.fmt.bytesToHex(hash, .lower);
 
     // Generate scoop manifest
     try generateScoopManifest(allocator, version, &hex_hash);
@@ -126,13 +125,10 @@ fn generateScoopManifest(allocator: std.mem.Allocator, version: []const u8, hash
         },
     };
 
-    var buffer = std.ArrayList(u8).init(allocator);
-    defer buffer.deinit();
-
-    try json.stringify(manifest, .{ .whitespace = .indent_2 }, buffer.writer());
-    try buffer.append('\n');
+    const manifest_str = try std.fmt.allocPrint(allocator, "{f}\n", .{json.fmt(manifest, .{ .whitespace = .indent_2 })});
+    defer allocator.free(manifest_str);
 
     const file = try fs.cwd().createFile("rb.json", .{});
     defer file.close();
-    try file.writeAll(buffer.items);
+    try file.writeAll(manifest_str);
 }
