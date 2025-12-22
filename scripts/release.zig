@@ -23,29 +23,23 @@ pub fn main() !void {
     // Format version.zon
     try formatVersionZon(allocator);
 
-    // Build the project
-    try buildProject(allocator);
-
     // Create dist directory
     try fs.cwd().makePath("dist");
 
-    // Compress the binary
-    try compressBinary(allocator);
+    // Build and compress for x86_64
+    std.debug.print("Building x86_64-windows-msvc...\n", .{});
+    try buildProject(allocator, "x86_64-windows-msvc");
+    try compressBinary(allocator, "x86_64-pc-windows-msvc");
+    const x64_hash = try calculateHash(allocator, "dist/rb-x86_64-pc-windows-msvc.zip");
 
-    // Read the zip file and calculate hash
-    const zip_path = "dist/rb-x86_64-pc-windows-msvc.zip";
-    const zip_data = try fs.cwd().readFileAlloc(allocator, zip_path, 100 * 1024 * 1024);
-    defer allocator.free(zip_data);
-
-    // Calculate SHA-256 hash
-    var hash: [std.crypto.hash.sha2.Sha256.digest_length]u8 = undefined;
-    std.crypto.hash.sha2.Sha256.hash(zip_data, &hash, .{});
-
-    // Convert hash to hex string
-    const hex_hash = std.fmt.bytesToHex(hash, .lower);
+    // Build and compress for aarch64
+    std.debug.print("Building aarch64-windows-msvc...\n", .{});
+    try buildProject(allocator, "aarch64-windows-msvc");
+    try compressBinary(allocator, "aarch64-pc-windows-msvc");
+    const arm64_hash = try calculateHash(allocator, "dist/rb-aarch64-pc-windows-msvc.zip");
 
     // Generate scoop manifest
-    try generateScoopManifest(allocator, version, &hex_hash);
+    try generateScoopManifest(allocator, version, x64_hash, arm64_hash);
 
     std.debug.print("✅ Release preparation completed successfully\n", .{});
 }
@@ -75,34 +69,55 @@ fn formatVersionZon(allocator: std.mem.Allocator) !void {
     _ = try child.spawnAndWait();
 }
 
-fn buildProject(allocator: std.mem.Allocator) !void {
+fn buildProject(allocator: std.mem.Allocator, target: []const u8) !void {
+    const target_arg = try std.fmt.allocPrint(allocator, "-Dtarget={s}", .{target});
+    defer allocator.free(target_arg);
+
     const argv = [_][]const u8{
         "zig",
         "build",
-        "-Dtarget=x86_64-windows-msvc",
+        target_arg,
         "-Doptimize=ReleaseSmall",
     };
     var child = std.process.Child.init(&argv, allocator);
     _ = try child.spawnAndWait();
 }
 
-fn compressBinary(allocator: std.mem.Allocator) !void {
+fn compressBinary(allocator: std.mem.Allocator, target: []const u8) !void {
+    const dest_path = try std.fmt.allocPrint(allocator, "dist/rb-{s}.zip", .{target});
+    defer allocator.free(dest_path);
+
     const argv = [_][]const u8{
         "powershell",
         "Compress-Archive",
         "-Path",
         "zig-out/bin/rb.exe",
         "-DestinationPath",
-        "dist/rb-x86_64-pc-windows-msvc.zip",
+        dest_path,
         "-Force",
     };
     var child = std.process.Child.init(&argv, allocator);
     _ = try child.spawnAndWait();
 }
 
-fn generateScoopManifest(allocator: std.mem.Allocator, version: []const u8, hash: []const u8) !void {
-    const url = try std.fmt.allocPrint(allocator, "https://github.com/ryuapp/rb/releases/download/v{s}/rb-x86_64-pc-windows-msvc.zip", .{version});
-    defer allocator.free(url);
+fn calculateHash(allocator: std.mem.Allocator, zip_path: []const u8) ![std.crypto.hash.sha2.Sha256.digest_length * 2]u8 {
+    const zip_data = try fs.cwd().readFileAlloc(allocator, zip_path, 100 * 1024 * 1024);
+    defer allocator.free(zip_data);
+
+    // Calculate SHA-256 hash
+    var hash: [std.crypto.hash.sha2.Sha256.digest_length]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(zip_data, &hash, .{});
+
+    // Convert hash to hex string
+    return std.fmt.bytesToHex(hash, .lower);
+}
+
+fn generateScoopManifest(allocator: std.mem.Allocator, version: []const u8, x64_hash: [std.crypto.hash.sha2.Sha256.digest_length * 2]u8, arm64_hash: [std.crypto.hash.sha2.Sha256.digest_length * 2]u8) !void {
+    const x64_url = try std.fmt.allocPrint(allocator, "https://github.com/ryuapp/rb/releases/download/v{s}/rb-x86_64-pc-windows-msvc.zip", .{version});
+    defer allocator.free(x64_url);
+
+    const arm64_url = try std.fmt.allocPrint(allocator, "https://github.com/ryuapp/rb/releases/download/v{s}/rb-aarch64-pc-windows-msvc.zip", .{version});
+    defer allocator.free(arm64_url);
 
     const manifest = .{
         .version = version,
@@ -110,8 +125,12 @@ fn generateScoopManifest(allocator: std.mem.Allocator, version: []const u8, hash
         .license = "MIT",
         .architecture = .{
             .@"64bit" = .{
-                .url = url,
-                .hash = hash,
+                .url = x64_url,
+                .hash = &x64_hash,
+            },
+            .arm64 = .{
+                .url = arm64_url,
+                .hash = &arm64_hash,
             },
         },
         .bin = "rb.exe",
@@ -120,6 +139,9 @@ fn generateScoopManifest(allocator: std.mem.Allocator, version: []const u8, hash
             .architecture = .{
                 .@"64bit" = .{
                     .url = "https://github.com/ryuapp/rb/releases/download/v$version/rb-x86_64-pc-windows-msvc.zip",
+                },
+                .arm64 = .{
+                    .url = "https://github.com/ryuapp/rb/releases/download/v$version/rb-aarch64-pc-windows-msvc.zip",
                 },
             },
         },
