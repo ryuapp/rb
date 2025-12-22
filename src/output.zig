@@ -24,7 +24,7 @@ const WindowsOutput = struct {
     // Make a console output code is the same as before execution
     fn setAbortSignalHandler(comptime handler: *const fn () void) !void {
         const handler_routine = struct {
-            fn handler_routine(dwCtrlType: win.DWORD) callconv(win.WINAPI) win.BOOL {
+            fn handler_routine(dwCtrlType: win.DWORD) callconv(std.builtin.CallingConvention.winapi) win.BOOL {
                 if (dwCtrlType == win.CTRL_C_EVENT) {
                     handler();
                     return win.TRUE;

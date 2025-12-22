@@ -8,7 +8,7 @@ jobs:
   CI:
     strategy:
       matrix:
-        os: [windows-2025, windows-2022]
+        os: [windows-latest, windows-11-arm]
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
@@ -25,9 +25,9 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.14.1
+          version: 0.15.2
       - name: Setup Deno
-        uses: denoland/setup-deno@v2
+        run: npm i -g deno
 
       - name: Check format
         run: deno task fmt:check
