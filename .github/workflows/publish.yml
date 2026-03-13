@@ -3,6 +3,10 @@ on:
   release:
     types: [released]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag (e.g. v0.3.3)"
+        required: true
 jobs:
   publish:
     runs-on: windows-latest
@@ -11,4 +15,5 @@ jobs:
         with:
           identifier: Ryuapp.Rb
           max-versions-to-keep: 5
+          release-tag: ${{ github.event.inputs.tag || github.event.release.tag_name }}
           token: ${{ secrets.WINGET_TOKEN }}
