@@ -122,7 +122,7 @@ fn generateScoopManifest(allocator: std.mem.Allocator, version: []const u8, x64_
     const manifest = .{
         .version = version,
         .homepage = "https://github.com/ryuapp/rb",
-        .license = "MIT",
+        .license = "MIT-0",
         .architecture = .{
             .@"64bit" = .{
                 .url = x64_url,
