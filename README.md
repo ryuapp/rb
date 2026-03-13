@@ -28,3 +28,7 @@ winget install Ryuapp.Rb
 ```bash
 scoop install https://raw.githubusercontent.com/ryuapp/rb/main/rb.json
 ```
+
+## LICENSE
+
+MIT-0
