@@ -16,4 +16,5 @@ jobs:
           identifier: Ryuapp.Rb
           max-versions-to-keep: 5
           release-tag: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+          installers-regex: '\.zip$'
           token: ${{ secrets.WINGET_TOKEN }}
