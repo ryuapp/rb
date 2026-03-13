@@ -1,11 +1,15 @@
 {
-  "version": "0.3.2",
+  "version": "0.4.0",
   "homepage": "https://github.com/ryuapp/rb",
   "license": "MIT-0",
   "architecture": {
     "64bit": {
-      "url": "https://github.com/ryuapp/rb/releases/download/v0.3.2/rb-x86_64-pc-windows-msvc.zip",
-      "hash": "06f1bf05908d1a1d92c7aff82f8438c1f08eb10ebcde1dfa1fac255a83b0d795"
+      "url": "https://github.com/ryuapp/rb/releases/download/v0.4.0/rb-x86_64-pc-windows-msvc.zip",
+      "hash": "706d291b5a5bdd750c5523c497bd15780930ee746eec98f540902c7c8d42e17e"
+    },
+    "arm64": {
+      "url": "https://github.com/ryuapp/rb/releases/download/v0.4.0/rb-aarch64-pc-windows-msvc.zip",
+      "hash": "98a1b11a18deb2dbdf23ff580f3f20b974e9d5a072dc787eed2285b0c8fed18f"
     }
   },
   "bin": "rb.exe",
@@ -14,6 +18,9 @@
     "architecture": {
       "64bit": {
         "url": "https://github.com/ryuapp/rb/releases/download/v$version/rb-x86_64-pc-windows-msvc.zip"
+      },
+      "arm64": {
+        "url": "https://github.com/ryuapp/rb/releases/download/v$version/rb-aarch64-pc-windows-msvc.zip"
       }
     }
   }
