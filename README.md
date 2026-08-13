@@ -23,6 +23,12 @@ rb [FILE|DIRECTORY]...
 winget install Ryuapp.Rb
 ```
 
+[mise](https://mise.jdx.dev):
+
+```bash
+mise use -g github:ryuapp/rb
+```
+
 [Scoop](https://scoop.sh):
 
 ```bash
