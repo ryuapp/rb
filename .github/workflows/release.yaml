@@ -13,20 +13,30 @@ on:
 jobs:
   release:
     runs-on: windows-latest
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
     permissions:
       contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - name: Setup Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
         with:
           version: 0.16.0
       - name: Setup Deno
         uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+      - name: Validate release version
+        run: zig run scripts/validate-release.zig
       - name: Build release
         run: deno task release
       - name: Create GitHub Release
-        run: gh release create ${{ github.event.inputs.tag || github.ref_name }} dist/*.zip --title ${{ github.event.inputs.tag || github.ref_name }} --generate-notes
+        run: gh release create "$env:RELEASE_TAG" dist/*.zip --title "$env:RELEASE_TAG" --generate-notes --verify-tag --draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Publish GitHub Release
+        run: gh release edit "$env:RELEASE_TAG" --draft=false
         env:
           GH_TOKEN: ${{ github.token }}
