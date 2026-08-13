@@ -41,7 +41,7 @@ pub fn main(init: std.process.Init) !void {
     // Generate scoop manifest
     try generateScoopManifest(io, allocator, version, x64_hash, arm64_hash);
 
-    std.debug.print("✅ Release preparation completed successfully\n", .{});
+    std.debug.print("Release preparation completed successfully\n", .{});
 }
 
 fn parseVersion(allocator: std.mem.Allocator, content: []const u8) ![]u8 {
@@ -87,17 +87,17 @@ fn buildProject(io: std.Io, allocator: std.mem.Allocator, target: []const u8, pr
 fn compressBinary(io: std.Io, allocator: std.mem.Allocator, prefix: []const u8, target: []const u8) !void {
     const dest_path = try std.fmt.allocPrint(allocator, "dist/rb-{s}.zip", .{target});
     defer allocator.free(dest_path);
-    const binary_path = try std.fmt.allocPrint(allocator, "{s}/bin/rb.exe", .{prefix});
-    defer allocator.free(binary_path);
-
+    const binary_dir = try std.fmt.allocPrint(allocator, "{s}/bin", .{prefix});
+    defer allocator.free(binary_dir);
     const argv = [_][]const u8{
-        "powershell",
-        "Compress-Archive",
-        "-Path",
-        binary_path,
-        "-DestinationPath",
+        "tar",
+        "-a",
+        "-c",
+        "-f",
         dest_path,
-        "-Force",
+        "-C",
+        binary_dir,
+        "rb.exe",
     };
     try runCommand(io, &argv);
 }
