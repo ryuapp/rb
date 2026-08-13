@@ -5,7 +5,9 @@ const com = zigwin32.system.com;
 const shell = zigwin32.ui.shell;
 const foundation = zigwin32.foundation;
 const debug = zigwin32.system.diagnostics.debug;
-const memory = zigwin32.system.memory;
+const kernel32 = zigwin32.kernel32;
+const ole32 = zigwin32.ole32;
+const shell32 = zigwin32.shell32;
 
 const IShellItem = shell.IShellItem;
 const IFileOperation = shell.IFileOperation;
@@ -15,13 +17,13 @@ const CLSID_FileOperation = shell.CLSID_FileOperation;
 const CLSCTX_ALL = com.CLSCTX_ALL;
 const COINIT_MULTITHREADED = com.COINIT_MULTITHREADED;
 
-const CoUninitialize = com.CoUninitialize;
-const CoInitializeEx = com.CoInitializeEx;
-const CoCreateInstance = com.CoCreateInstance;
-const SHCreateItemFromParsingName = shell.SHCreateItemFromParsingName;
+const CoUninitialize = ole32.CoUninitialize;
+const CoInitializeEx = ole32.CoInitializeEx;
+const CoCreateInstance = ole32.CoCreateInstance;
+const SHCreateItemFromParsingName = shell32.SHCreateItemFromParsingName;
 
-const FormatMessageW = debug.FormatMessageW;
-const LocalFree = memory.LocalFree;
+const FormatMessageW = kernel32.FormatMessageW;
+const LocalFree = kernel32.LocalFree;
 
 // Operation Flags
 // See: https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ifileoperation-setoperationflags
@@ -41,30 +43,30 @@ fn getFileOperation() !*IFileOperation {
         IID_IFileOperation,
         @ptrCast(&file_op),
     );
-    if (hr != 0) return error.CoCreateInstanceFailed;
+    if (hr.failed) return error.CoCreateInstanceFailed;
     return file_op;
 }
 
 fn getShellItem(filename: [:0]u16) !*IShellItem {
     var shell_item: *IShellItem = undefined;
     const result = SHCreateItemFromParsingName(filename, null, IID_IShellItem, @ptrCast(&shell_item));
-    if (result != 0) return error.CreateItemFailed;
+    if (result.failed) return error.CreateItemFailed;
     return shell_item;
 }
 
-pub fn trash(allocator: std.mem.Allocator, filename: []const u8) !i32 {
+pub fn trash(io: std.Io, allocator: std.mem.Allocator, filename: []const u8) !i32 {
     // Initialize the COM Library
     // See: https://learn.microsoft.com/en-us/windows/win32/learnwin32/initializing-the-com-library
     const hr_init = CoInitializeEx(null, COINIT_MULTITHREADED);
     defer CoUninitialize();
-    if (hr_init != 0) return error.CoInitializeFailed;
+    if (hr_init.failed) return error.CoInitializeFailed;
 
     var file_op = getFileOperation() catch |err| {
         return err;
     };
     const operation_flags = FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMATION | FOFX_ADDUNDORECORD | FOFX_EARLYFAILURE | FOFX_RECYCLEONDELETE;
     _ = file_op.SetOperationFlags(operation_flags);
-    const realpath = std.fs.cwd().realpathAlloc(allocator, filename) catch |err| {
+    const realpath = std.Io.Dir.cwd().realPathFileAlloc(io, filename, allocator) catch |err| {
         if (err == error.FileNotFound) {
             return 2;
         }
@@ -84,7 +86,7 @@ pub fn trash(allocator: std.mem.Allocator, filename: []const u8) !i32 {
     return switch (result) {
         zigwin32.foundation.E_ACCESSDENIED => 5,
         shell.COPYENGINE_E_SHARING_VIOLATION_SRC => 32,
-        else => result,
+        else => @bitCast(result),
     };
 }
 

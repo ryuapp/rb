@@ -11,9 +11,10 @@ const VersionStruct = struct {
 };
 const RbVersion: VersionStruct = @import("version.zon");
 
-pub fn main() !void {
+pub fn main(init: std.process.Init) !void {
     try Output.init();
-    const alc = std.heap.page_allocator;
+    const alc = init.gpa;
+    const io = init.io;
 
     const params = comptime clap.parseParamsComptime(
         \\-f, --force           Ignore nonexistent files and arguments, never prompt
@@ -23,12 +24,12 @@ pub fn main() !void {
         \\<str>...              Put FILE(s) and DIRECTORY(ies) in the recycle bin.
     );
 
-    var res = clap.parse(clap.Help, &params, clap.parsers.default, .{
+    var res = clap.parse(clap.Help, &params, clap.parsers.default, init.minimal.args, .{
         .allocator = alc,
     }) catch {
-        const stderr = std.fs.File.stderr();
+        const stderr = std.Io.File.stderr();
         var buffer: [4096]u8 = undefined;
-        var writer = stderr.writer(&buffer);
+        var writer = stderr.writer(io, &buffer);
         try writer.interface.print("rb: cannot be executed: Invalid arguments\n", .{});
         try writer.interface.flush();
         Output.restore();
@@ -48,9 +49,9 @@ pub fn main() !void {
             \\  -h, --help            Display this help
             \\      --version         Display version information
         ;
-        const stderr = std.fs.File.stderr();
+        const stderr = std.Io.File.stderr();
         var buffer: [4096]u8 = undefined;
-        var writer = stderr.writer(&buffer);
+        var writer = stderr.writer(io, &buffer);
         try writer.interface.print("{s}\n", .{help_message});
         try writer.interface.flush();
         Output.restore();
@@ -62,9 +63,9 @@ pub fn main() !void {
         const message =
             \\rb {s}
         ;
-        const stderr = std.fs.File.stderr();
+        const stderr = std.Io.File.stderr();
         var buffer: [4096]u8 = undefined;
-        var writer = stderr.writer(&buffer);
+        var writer = stderr.writer(io, &buffer);
         try writer.interface.print(message, .{RbVersion.version});
         try writer.interface.flush();
         Output.restore();
@@ -73,9 +74,9 @@ pub fn main() !void {
 
     // No arguments
     if (res.positionals[0].len == 0) {
-        const stderr = std.fs.File.stderr();
+        const stderr = std.Io.File.stderr();
         var buffer: [4096]u8 = undefined;
-        var writer = stderr.writer(&buffer);
+        var writer = stderr.writer(io, &buffer);
         try writer.interface.print("rb: missing operand\nTry 'rb --help' for more information\n", .{});
         try writer.interface.flush();
         Output.restore();
@@ -85,12 +86,12 @@ pub fn main() !void {
     const verbose = res.args.verbose != 0;
     const force = res.args.force != 0;
 
-    const stderr = std.fs.File.stderr();
+    const stderr = std.Io.File.stderr();
     var buffer: [4096]u8 = undefined;
-    var stderr_writer = stderr.writer(&buffer);
+    var stderr_writer = stderr.writer(io, &buffer);
 
     for (res.positionals[0]) |filename| {
-        const result = try trash.trash(alc, filename);
+        const result = try trash.trash(io, alc, filename);
         // If --force is enabled and file doesn't exist (error code 2) on Windows, ignore it
         if (force and ((comptime builtin.os.tag == .windows) and result == 2)) {
             continue;
