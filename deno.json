@@ -2,8 +2,8 @@
   "tasks": {
     "run": "deno task build && zig-out/bin/rb.exe",
     "test": "zig build test",
-    "fmt": "zig fmt . && deno fmt",
-    "fmt:check": "zig fmt . --check && deno fmt --check",
+    "fmt": "zig fmt build.zig build.zig.zon src scripts",
+    "fmt:check": "zig fmt build.zig build.zig.zon src scripts --check",
     "build": "zig build -Dtarget=x86_64-windows-msvc -Doptimize=ReleaseSmall",
     "release": "zig build release",
     "check:hash": "certutil -hashfile dist/rb-x86_64-pc-windows-msvc.zip SHA256"

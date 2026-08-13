@@ -1,8 +1,9 @@
 const std = @import("std");
 const builtin = @import("builtin");
+const zigwin32 = @import("zigwin32");
 
-const win = std.os.windows;
-const k32 = win.kernel32;
+const console = zigwin32.system.console;
+const k32 = zigwin32.kernel32;
 
 const is_windows = builtin.os.tag == .windows;
 
@@ -24,17 +25,19 @@ const WindowsOutput = struct {
     // Make a console output code is the same as before execution
     fn setAbortSignalHandler(comptime handler: *const fn () void) !void {
         const handler_routine = struct {
-            fn handler_routine(dwCtrlType: win.DWORD) callconv(std.builtin.CallingConvention.winapi) win.BOOL {
-                if (dwCtrlType == win.CTRL_C_EVENT) {
+            fn handler_routine(dwCtrlType: u32) callconv(.winapi) i32 {
+                if (dwCtrlType == console.CTRL_C_EVENT) {
                     handler();
-                    return win.TRUE;
+                    return 1;
                 } else {
-                    return win.FALSE;
+                    return 0;
                 }
             }
         }.handler_routine;
 
-        try win.SetConsoleCtrlHandler(handler_routine, true);
+        if (k32.SetConsoleCtrlHandler(handler_routine, 1) == 0) {
+            return error.SetConsoleCtrlHandlerFailed;
+        }
     }
     fn abortSignalHandler() void {
         restore();

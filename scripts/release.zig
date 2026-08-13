@@ -1,16 +1,14 @@
 const std = @import("std");
-const fs = std.fs;
 const process = std.process;
-const io = std.io;
 const json = std.json;
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+pub fn main(init: std.process.Init) !void {
+    const allocator = init.gpa;
+    const io = init.io;
+    const cwd = std.Io.Dir.cwd();
 
     // Read build.zig.zon
-    const build_zon_content = try fs.cwd().readFileAlloc(allocator, "build.zig.zon", 1024 * 1024);
+    const build_zon_content = try cwd.readFileAlloc(io, "build.zig.zon", allocator, .limited(1024 * 1024));
     defer allocator.free(build_zon_content);
 
     // Parse version from build.zig.zon
@@ -18,28 +16,30 @@ pub fn main() !void {
     defer allocator.free(version);
 
     // Write version.zon
-    try writeVersionZon(allocator, version);
+    try writeVersionZon(io, allocator, version);
 
     // Format version.zon
-    try formatVersionZon(allocator);
+    try formatVersionZon(io);
 
     // Create dist directory
-    try fs.cwd().makePath("dist");
+    try cwd.createDirPath(io, "dist");
 
     // Build and compress for x86_64
     std.debug.print("Building x86_64-windows-msvc...\n", .{});
-    try buildProject(allocator, "x86_64-windows-msvc");
-    try compressBinary(allocator, "x86_64-pc-windows-msvc");
-    const x64_hash = try calculateHash(allocator, "dist/rb-x86_64-pc-windows-msvc.zip");
+    const x64_prefix = "zig-out/release/x86_64-windows-msvc";
+    try buildProject(io, allocator, "x86_64-windows-msvc", x64_prefix);
+    try compressBinary(io, allocator, x64_prefix, "x86_64-pc-windows-msvc");
+    const x64_hash = try calculateHash(io, allocator, "dist/rb-x86_64-pc-windows-msvc.zip");
 
     // Build and compress for aarch64
     std.debug.print("Building aarch64-windows-msvc...\n", .{});
-    try buildProject(allocator, "aarch64-windows-msvc");
-    try compressBinary(allocator, "aarch64-pc-windows-msvc");
-    const arm64_hash = try calculateHash(allocator, "dist/rb-aarch64-pc-windows-msvc.zip");
+    const arm64_prefix = "zig-out/release/aarch64-windows-msvc";
+    try buildProject(io, allocator, "aarch64-windows-msvc", arm64_prefix);
+    try compressBinary(io, allocator, arm64_prefix, "aarch64-pc-windows-msvc");
+    const arm64_hash = try calculateHash(io, allocator, "dist/rb-aarch64-pc-windows-msvc.zip");
 
     // Generate scoop manifest
-    try generateScoopManifest(allocator, version, x64_hash, arm64_hash);
+    try generateScoopManifest(io, allocator, version, x64_hash, arm64_hash);
 
     std.debug.print("✅ Release preparation completed successfully\n", .{});
 }
@@ -54,22 +54,22 @@ fn parseVersion(allocator: std.mem.Allocator, content: []const u8) ![]u8 {
     return allocator.dupe(u8, version);
 }
 
-fn writeVersionZon(allocator: std.mem.Allocator, version: []const u8) !void {
+fn writeVersionZon(io: std.Io, allocator: std.mem.Allocator, version: []const u8) !void {
     const version_content = try std.fmt.allocPrint(allocator, ".{{ .version = \"{s}\" }}\n", .{version});
     defer allocator.free(version_content);
 
-    const file = try fs.cwd().createFile("src/version.zon", .{});
-    defer file.close();
-    try file.writeAll(version_content);
+    try std.Io.Dir.cwd().writeFile(io, .{
+        .sub_path = "src/version.zon",
+        .data = version_content,
+    });
 }
 
-fn formatVersionZon(allocator: std.mem.Allocator) !void {
+fn formatVersionZon(io: std.Io) !void {
     const argv = [_][]const u8{ "zig", "fmt", "src/version.zon" };
-    var child = std.process.Child.init(&argv, allocator);
-    _ = try child.spawnAndWait();
+    try runCommand(io, &argv);
 }
 
-fn buildProject(allocator: std.mem.Allocator, target: []const u8) !void {
+fn buildProject(io: std.Io, allocator: std.mem.Allocator, target: []const u8, prefix: []const u8) !void {
     const target_arg = try std.fmt.allocPrint(allocator, "-Dtarget={s}", .{target});
     defer allocator.free(target_arg);
 
@@ -78,30 +78,41 @@ fn buildProject(allocator: std.mem.Allocator, target: []const u8) !void {
         "build",
         target_arg,
         "-Doptimize=ReleaseSmall",
+        "--prefix",
+        prefix,
     };
-    var child = std.process.Child.init(&argv, allocator);
-    _ = try child.spawnAndWait();
+    try runCommand(io, &argv);
 }
 
-fn compressBinary(allocator: std.mem.Allocator, target: []const u8) !void {
+fn compressBinary(io: std.Io, allocator: std.mem.Allocator, prefix: []const u8, target: []const u8) !void {
     const dest_path = try std.fmt.allocPrint(allocator, "dist/rb-{s}.zip", .{target});
     defer allocator.free(dest_path);
+    const binary_path = try std.fmt.allocPrint(allocator, "{s}/bin/rb.exe", .{prefix});
+    defer allocator.free(binary_path);
 
     const argv = [_][]const u8{
         "powershell",
         "Compress-Archive",
         "-Path",
-        "zig-out/bin/rb.exe",
+        binary_path,
         "-DestinationPath",
         dest_path,
         "-Force",
     };
-    var child = std.process.Child.init(&argv, allocator);
-    _ = try child.spawnAndWait();
+    try runCommand(io, &argv);
 }
 
-fn calculateHash(allocator: std.mem.Allocator, zip_path: []const u8) ![std.crypto.hash.sha2.Sha256.digest_length * 2]u8 {
-    const zip_data = try fs.cwd().readFileAlloc(allocator, zip_path, 100 * 1024 * 1024);
+fn runCommand(io: std.Io, argv: []const []const u8) !void {
+    var child = try process.spawn(io, .{ .argv = argv });
+    const term = try child.wait(io);
+    switch (term) {
+        .exited => |code| if (code != 0) return error.ChildProcessFailed,
+        else => return error.ChildProcessFailed,
+    }
+}
+
+fn calculateHash(io: std.Io, allocator: std.mem.Allocator, zip_path: []const u8) ![std.crypto.hash.sha2.Sha256.digest_length * 2]u8 {
+    const zip_data = try std.Io.Dir.cwd().readFileAlloc(io, zip_path, allocator, .limited(100 * 1024 * 1024));
     defer allocator.free(zip_data);
 
     // Calculate SHA-256 hash
@@ -112,7 +123,7 @@ fn calculateHash(allocator: std.mem.Allocator, zip_path: []const u8) ![std.crypt
     return std.fmt.bytesToHex(hash, .lower);
 }
 
-fn generateScoopManifest(allocator: std.mem.Allocator, version: []const u8, x64_hash: [std.crypto.hash.sha2.Sha256.digest_length * 2]u8, arm64_hash: [std.crypto.hash.sha2.Sha256.digest_length * 2]u8) !void {
+fn generateScoopManifest(io: std.Io, allocator: std.mem.Allocator, version: []const u8, x64_hash: [std.crypto.hash.sha2.Sha256.digest_length * 2]u8, arm64_hash: [std.crypto.hash.sha2.Sha256.digest_length * 2]u8) !void {
     const x64_url = try std.fmt.allocPrint(allocator, "https://github.com/ryuapp/rb/releases/download/v{s}/rb-x86_64-pc-windows-msvc.zip", .{version});
     defer allocator.free(x64_url);
 
@@ -150,7 +161,8 @@ fn generateScoopManifest(allocator: std.mem.Allocator, version: []const u8, x64_
     const manifest_str = try std.fmt.allocPrint(allocator, "{f}\n", .{json.fmt(manifest, .{ .whitespace = .indent_2 })});
     defer allocator.free(manifest_str);
 
-    const file = try fs.cwd().createFile("rb.json", .{});
-    defer file.close();
-    try file.writeAll(manifest_str);
+    try std.Io.Dir.cwd().writeFile(io, .{
+        .sub_path = "rb.json",
+        .data = manifest_str,
+    });
 }
