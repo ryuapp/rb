@@ -18,6 +18,7 @@ jobs:
         with:
           path: |
             .zig-cache
+            zig-pkg
           key: ${{ runner.os }}-zig-${{ hashFiles('build.zig.zon') }}
           restore-keys: |
             ${{ runner.os }}-zig-${{ hashFiles('build.zig.zon') }}
