@@ -65,7 +65,8 @@ pub fn trash(io: std.Io, allocator: std.mem.Allocator, filename: []const u8) !i3
         return err;
     };
     const operation_flags = FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMATION | FOFX_ADDUNDORECORD | FOFX_EARLYFAILURE | FOFX_RECYCLEONDELETE;
-    _ = file_op.SetOperationFlags(operation_flags);
+    const set_flags_result = file_op.SetOperationFlags(operation_flags);
+    if (set_flags_result.failed) return @bitCast(set_flags_result);
     const realpath = std.Io.Dir.cwd().realPathFileAlloc(io, filename, allocator) catch |err| {
         if (err == error.FileNotFound) {
             return 2;
@@ -80,14 +81,47 @@ pub fn trash(io: std.Io, allocator: std.mem.Allocator, filename: []const u8) !i3
     const shell_item = getShellItem(filepath) catch |err| {
         return err;
     };
-    _ = file_op.DeleteItem(shell_item, null);
+    const delete_result = file_op.DeleteItem(shell_item, null);
+    if (delete_result.failed) return @bitCast(delete_result);
 
-    const result = file_op.PerformOperations();
-    return switch (result) {
-        zigwin32.foundation.E_ACCESSDENIED => 5,
-        shell.COPYENGINE_E_SHARING_VIOLATION_SRC => 32,
-        else => @bitCast(result),
-    };
+    const perform_result = file_op.PerformOperations();
+    var operations_aborted: i32 = 0;
+    const aborted_result = file_op.GetAnyOperationsAborted(&operations_aborted);
+
+    if (perform_result.failed) {
+        return switch (perform_result) {
+            foundation.E_ACCESSDENIED,
+            shell.COPYENGINE_E_ACCESS_DENIED_DEST,
+            shell.COPYENGINE_E_ACCESS_DENIED_SRC,
+            shell.COPYENGINE_E_ACCESSDENIED_READONLY,
+            => 5,
+            shell.COPYENGINE_E_SHARING_VIOLATION_DEST,
+            shell.COPYENGINE_E_SHARING_VIOLATION_SRC,
+            => 32,
+            shell.COPYENGINE_E_DISK_FULL,
+            shell.COPYENGINE_E_DISK_FULL_CLEAN,
+            shell.COPYENGINE_E_REMOVABLE_FULL,
+            => 112,
+            shell.COPYENGINE_E_DIR_NOT_EMPTY => 145,
+            shell.COPYENGINE_E_NEWFILE_NAME_TOO_LONG,
+            shell.COPYENGINE_E_NEWFOLDER_NAME_TOO_LONG,
+            shell.COPYENGINE_E_PATH_TOO_DEEP_DEST,
+            shell.COPYENGINE_E_PATH_TOO_DEEP_SRC,
+            shell.COPYENGINE_E_RECYCLE_PATH_TOO_LONG,
+            => 206,
+            shell.COPYENGINE_E_FILE_TOO_LARGE,
+            shell.COPYENGINE_E_RECYCLE_SIZE_TOO_BIG,
+            => 223,
+            shell.COPYENGINE_E_REQUIRES_ELEVATION => 740,
+            shell.COPYENGINE_E_CANCELLED,
+            shell.COPYENGINE_E_USER_CANCELLED,
+            => 1223,
+            else => @bitCast(perform_result),
+        };
+    }
+    if (aborted_result.failed) return @bitCast(aborted_result);
+    if (operations_aborted != 0) return @intFromEnum(foundation.ERROR_CANCELLED);
+    return 0;
 }
 
 pub fn getErrorMessage(allocator: std.mem.Allocator, error_code: i32) ![]u8 {
