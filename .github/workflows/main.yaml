@@ -24,7 +24,7 @@ jobs:
             ${{ runner.os }}-zig-${{ hashFiles('build.zig.zon') }}
             ${{ runner.os }}-zig-
       - name: Setup Zig
-        uses: ryuapp/setup-zig@27d284f9843487fb43803ca65e4513aeba39d490 # main
+        uses: ryuapp/setup-zig@41fd5219e492216fdca9e6bca4c8b2f87498cb4b # main
         with:
           version: 0.16.0
       - name: Setup Deno
