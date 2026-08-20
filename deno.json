@@ -5,7 +5,7 @@
     "fmt": "zig fmt build.zig build.zig.zon src scripts",
     "fmt:check": "zig fmt build.zig build.zig.zon src scripts --check",
     "build": "zig build -Dtarget=x86_64-windows-msvc -Doptimize=ReleaseSmall",
-    "release": "zig build release",
+    "release": "zig build release -Doptimize=ReleaseSmall",
     "check:hash": "certutil -hashfile dist/rb-x86_64-pc-windows-msvc.zip SHA256"
   },
   "fmt": {
