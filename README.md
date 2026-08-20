@@ -20,7 +20,7 @@ rb [FILE|DIRECTORY]...
 [Winget](https://github.com/microsoft/winget-cli) (Recommended):
 
 ```bash
-winget install Ryuapp.Rb
+winget install --id=Ryuapp.Rb
 ```
 
 [mise](https://mise.jdx.dev):
